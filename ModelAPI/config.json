@@ -2,15 +2,19 @@
     "model_name": "gemini-1.5-flash",    
     "key": "your_key",
     "instructions":{
-        "Instruction2CodesBase": "Please continue to complete the given Python function inside <code></code> tags. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the function.\n3. Return only the completed code content that should go between <code> and </code> tags.\n",
-        "Instruction2CodesSelfEval": "Please continue to complete the given Python function inside <code></code> tags. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the function.\n3. Before returning, verify that your solution:\n   - Accurately implements the described functionality\n   - Maintains consistency with existing code behavior\n   - Handles edge cases implied by the problem\n4. Return only the completed code content that should go between <code> and </code> tags.\n",
-        "TrimmedInstruction2CodesBase": "Please continue to complete the given Python function inside <code></code> tags. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the function.\n3. Return only the completed code content that should go between <code> and </code> tags.\n"
+        "Instruction2CodesBase": "Please continue to complete the given Python starter codes. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the codes.\n3. Return only the completed code content .\n",
+        "Instruction2CodesSelfEval": "Please continue to complete the given Python starter codes. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the given codes.\n3. Before returning, verify that your solution:\n   - Accurately implements the described functionality\n   - Maintains consistency with existing code behavior\n   - Handles edge cases implied by the problem\n4. Return only the completed code content.\n",
+        "TrimmedInstruction2CodesBase": "Please continue to complete the given Python starter codes. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the codes.\n3. Return only the completed code content.\n",
+        "TrimmedInstruction2CodesWithoutExamples": "Please continue to complete the given Python starter codes. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the codes.\n3. Return only the completed code content.\n",
+        "TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)": "Please review the following prompt and provide feedback on its clarity and structure. Identify any ambiguities, conflict, redundant, or missing information first. Then return the improved prompt inside <prompt>...</prompt> block.",
+        "TrimmedInstructionImprovedPrompt2odes(AddStarterCodes)": "Please continue to complete the given Python starter codes. You must follow these rules strictly:\n1. Do NOT modify any existing code (including imports, function names, parameters, or given code blocks).\n2. Only add the missing part to finish the given codes.\n3. Before returning, verify that your solution:\n   - Accurately implements the described functionality\n   - Maintains consistency with existing code behavior\n   - Handles edge cases implied by the problem\n4. Return only the completed code content.\n"
     },
-    "method":"Instruction2CodesBase",
+    "method":"TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)",
     "intermediate_raw_codes_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/RawCodes/",
     "output_path": "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/data/",
     "dataset_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/data/ds1000.jsonl",
+    "trimmed_prompts_path": "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/data/trimmed_prompts/trimmed_prompts(summarize_instructions).pkl",
     "num_responses" : 1,
     "temperature": 0.6,
-    "num": 300
+    "num": 1000
 }

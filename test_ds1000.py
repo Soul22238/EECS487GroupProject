@@ -50,6 +50,7 @@ def eval_ds1000(answers: List[str]):
             #result['perturbation_type'] = ds1000[cid]['metadata']['perturbation_type']
             result['perturbation_type'] = ds1000[line_num]['metadata']['perturbation_type']
             ds1000_results.append(result)
+            line_num += 1
 
     df_res = pd.DataFrame.from_records(ds1000_results)
     pd.set_option('display.precision', 3)
