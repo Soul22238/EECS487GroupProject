@@ -1,11 +1,11 @@
-          score
-count  1000.000
-mean      0.365
+         score
+count  300.000
+mean     0.453
         score       
         count   mean
 library             
-Pandas   1000  0.365
+Pandas    300  0.453
                   score       
                   count   mean
 perturbation_type             
-Origin             1000  0.365
+Origin              300  0.453

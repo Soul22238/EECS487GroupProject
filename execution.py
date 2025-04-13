@@ -13,6 +13,28 @@ import platform
 import signal
 import tempfile
 
+def unsafe_execute(program: str, result: list, timeout: float):
+    with create_tempdir():
+        import os
+        import shutil
+        rmtree = shutil.rmtree
+        rmdir = os.rmdir
+        chdir = os.chdir
+
+        try:
+            exec_globals = {}
+            with swallow_io():
+                with time_limit(timeout):
+                    exec(program, exec_globals)
+            result.append("passed")
+        except TimeoutException:
+            result.append("timed out")
+        except BaseException as e:
+            result.append(f"failed: {e}")
+        finally:
+            shutil.rmtree = rmtree
+            os.rmdir = rmdir
+            os.chdir = chdir
 
 def check_correctness(program: str, timeout: float,
                       completion_id: Optional[int] = None) -> Dict:
@@ -24,44 +46,44 @@ def check_correctness(program: str, timeout: float,
         the results later even if execution finishes asynchronously.
     """
 
-    def unsafe_execute():
-        with create_tempdir():
-
-            # These system calls are needed when cleaning up tempdir.
-            import os
-            import shutil
-            rmtree = shutil.rmtree
-            rmdir = os.rmdir
-            chdir = os.chdir
-
-            # Disable functionalities that can make destructive changes to the test.
-            # reliability_guard()
-
-            # Construct the check program and run it.
-            check_program = (
-                program
-            )
-
-            try:
-                exec_globals = {}
-                with swallow_io():
-                    with time_limit(timeout):
-                        exec(check_program, exec_globals)
-                result.append("passed")
-            except TimeoutException:
-                result.append("timed out")
-            except BaseException as e:
-                result.append(f"failed: {e}")
-
-            # Needed for cleaning up.
-            shutil.rmtree = rmtree
-            os.rmdir = rmdir
-            os.chdir = chdir
+#     def unsafe_execute():
+#         with create_tempdir():
+# 
+#             # These system calls are needed when cleaning up tempdir.
+#             import os
+#             import shutil
+#             rmtree = shutil.rmtree
+#             rmdir = os.rmdir
+#             chdir = os.chdir
+# 
+#             # Disable functionalities that can make destructive changes to the test.
+#             # reliability_guard()
+# 
+#             # Construct the check program and run it.
+#             check_program = (
+#                 program
+#             )
+# 
+#             try:
+#                 exec_globals = {}
+#                 with swallow_io():
+#                     with time_limit(timeout):
+#                         exec(check_program, exec_globals)
+#                 result.append("passed")
+#             except TimeoutException:
+#                 result.append("timed out")
+#             except BaseException as e:
+#                 result.append(f"failed: {e}")
+# 
+#             # Needed for cleaning up.
+#             shutil.rmtree = rmtree
+#             os.rmdir = rmdir
+#             os.chdir = chdir
 
     manager = multiprocessing.Manager()
     result = manager.list()
-
-    p = multiprocessing.Process(target=unsafe_execute)
+    # p = multiprocessing.Process(target=unsafe_execute)
+    p = multiprocessing.Process(target=unsafe_execute, args=(program, result, timeout))
     p.start()
     p.join(timeout=timeout + 1)
     if p.is_alive():

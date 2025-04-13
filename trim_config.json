@@ -1,0 +1,7 @@
+{
+    "model_name": "gemini-1.5-flash",    
+    "key": "your_key",
+    "prompt1": "1. Reorganize the problem by separating it into two fields: a concise description wrapped in <description>...</description> and the original example wrapped in <example>...</example>. \n2. The description should summarize the task clearly in a few sentences. \n3. Do not change the content, only reorganize it. \nThe <example> field is optional and should only be included if there is example code or data in the original input.\nYour response should look like <description>...</description> or <description>...</description>\n<example>...</example>\nThe problem is: \n",
+    "prompt2": "1. Reorganize the problem by separating it into two fields: a comment wrapped in <comment>...</comment> and actual code (excluding comments) wrapped in <code>...</code>. \n2. Preserve the original order and wording. Do not modify or reformat the content — only separate it. The problem is: \n",
+    "out_path": "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/data/trimmed_prompts"
+}
