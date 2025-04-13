@@ -82,14 +82,14 @@ def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_pro
                 trimmed_prompts = pickle.load(f)
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
-        prompts = [[instruction + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
+        prompts = [[instruction + "\n" + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
     elif method == "TrimmedInstruction2CodesWithoutExamples":
         if os.path.exists(trimmed_prompts_path):
             with open(trimmed_prompts_path, 'rb') as f:
                 trimmed_prompts = pickle.load(f)
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
-        prompts = [[instruction + trimmed_prompts[i]["description"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
+        prompts = [[instruction + "\n" +trimmed_prompts[i]["description"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
     elif method == "TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)":
         # Use models to generate prompts
         if os.path.exists(trimmed_prompts_path):
@@ -97,7 +97,7 @@ def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_pro
                 trimmed_prompts = pickle.load(f)
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
-        prompts = [[instruction + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]] for i in ids]
+        prompts = [[instruction + "\nThe prompt is as follows:\n" + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]] for i in ids]
 
     return prompts
     
