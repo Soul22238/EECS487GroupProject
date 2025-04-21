@@ -14,22 +14,22 @@ The codes and data are largely adapted from the paper [_DS-1000: A Natural and R
 }
 ```
 ### Preprocessing and Experiments
-* Preprocessing 
-We used Trimming.py and trim_config.json to trim and summarize the original responses. 
-You will need to replace the api key with your key and run the following command to get the results.
+* Preprocessing: 
+We used Trimming.py along with the configuration file trim_config.json to clean and summarize the original responses.
+Before running the script, make sure to replace the API key in the config file with your own.
+Then, execute the following command to generate the trimmed results:
 ```shell
 python Trimming.py
 ```
 The trimmed prompts are stored in ./DS-1000/data/trimmed_prompts.
 
-* Experiments
-First revise the ModelAPI/config.jsonModelAPI/config.json.
-Replace your_key with your API key.
+* Experiments: 
+Open ModelAPI/config.json and replace the placeholder "your_key" with your actual API key.
 Then 
 ```shell
 python ModelAPI/generate_codes.py
 ```
-In this process, the model will record the responses returned by the API (raw responses)
+During this process, the model will save the raw responses returned by the API in the ./ModelAPI/RawCodes/model_name directory.
 
 ### Evaluation and Results
 
@@ -37,6 +37,6 @@ In this process, the model will record the responses returned by the API (raw re
 
 python test_ds1000.py --model gemini-1.5-flash-TrimmedInstruction2CodesBase-1000-answers
 ```
-There should be a generated gemini-1.5-flash-TrimmedInstruction2CodesBase-1000-result.txt in the results folder.
-All the summarized accuracies are in the results folder.
+A gemini-1.5-flash-TrimmedInstruction2CodesBase-1000-result.txt file should be generated in the results folder.
+All the summarized accuracy data can be found within the results folder.
 
