@@ -14,12 +14,22 @@ The codes and data are largely adapted from the paper [_DS-1000: A Natural and R
 }
 ```
 ### Preprocessing and Experiments
+* Preprocessing 
+We used Trimming.py and trim_config.json to trim and summarize the original responses. 
+You will need to replace the api key with your key and run the following command to get the results.
+```shell
+python Trimming.py
+```
+The trimmed prompts are stored in ./DS-1000/data/trimmed_prompts.
+
+* Experiments
 First revise the ModelAPI/config.jsonModelAPI/config.json.
 Replace your_key with your API key.
 Then 
 ```shell
 python ModelAPI/generate_codes.py
 ```
+In this process, the model will record the responses returned by the API (raw responses)
 
 ### Evaluation and Results
 
