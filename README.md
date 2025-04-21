@@ -16,7 +16,11 @@ Please cite their work using the following bibtex entry:
   primaryClass={cs.LG}
 }
 ```
-
+### 
+Make sure that you are in the DS-1000-dataset path. If not, you can
+```shell
+cd .../DS-1000-dataset 
+```
 
 ### Installation
 
@@ -75,12 +79,10 @@ python3 human-eval/Experiments/get_accuracy.py
 
 
 
-
-
 ## DS-1000
 Make sure that you are in the DS-1000-dataset path. If not, you can
 ```shell
-cd DS-1000-dataset 
+cd .../HumanEval-dataset 
 ```
 ### Declaration
 The codes and data are largely adapted from the paper [_DS-1000: A Natural and Reliable Benchmark for Data Science Code Generation_](https://arxiv.org/abs/2211.11501). The oriinal github repository is attached here [project page](https://ds1000-code-gen.github.io/) .
