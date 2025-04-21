@@ -1,7 +1,8 @@
-# EECS 487 Group18 Prompt Engineering 
-## Declaration
+# EECS 487 Group18 Evaluating Prompt Engineering Strategies for LLM-Based Code Generation and Debugging
+## DS-1000
+### Declaration
 The codes and data are largely adapted from the paper [_DS-1000: A Natural and Reliable Benchmark for Data Science Code Generation_](https://arxiv.org/abs/2211.11501). The oriinal github repository is attached here [project page](https://ds1000-code-gen.github.io/) .
-## Citation for the original work
+### Citation for the original work
 
 ```
 @article{Lai2022DS1000,
@@ -12,7 +13,7 @@ The codes and data are largely adapted from the paper [_DS-1000: A Natural and R
   volume={abs/2211.11501}
 }
 ```
-## Experiments
+### Experiments
 First revise the ModelAPI/config.jsonModelAPI/config.json.
 Replace your_key with your API key.
 Then 
@@ -20,7 +21,7 @@ Then
 python ModelAPI/generate_codes.py
 ```
 
-## Results
+### Results
 
 ```shell
 
