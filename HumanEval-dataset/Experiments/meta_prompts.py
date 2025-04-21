@@ -1,4 +1,4 @@
-# Gemini key: AIzaSyDzzdnYzhjR6k-A0JiE-4L9S8RK8q3XKTI
+
 
 import json
 import google.generativeai as genai
