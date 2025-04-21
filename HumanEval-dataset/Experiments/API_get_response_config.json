@@ -1,0 +1,23 @@
+{
+    "model_name": "gemini-1.5-flash", 
+    "key": "your_key",
+    "instructions":{
+        "Instruction2CodesBase": "Please help me to complete this python function based on the function description. Finish the codes after def and pay attention to the indentation (do not include def ...). The indentation looks like: '    import time\n    time.sleep(10)\n    return 1' or '\treturn 1'. You must use <code>...</code> to indicate the return codes.",
+        "Instruction2CodesWithoutExamples": "Please help me to complete this python function based on the function description. Finish the codes after def and pay attention to the indentation (do not include def ...). The indentation looks like: '    import time\n    time.sleep(10)\n    return 1' or '\treturn 1'. You must use <code>...</code> to indicate the return codes.",
+        "Instruction2ImprovedPromptsExcludingStarterCodes": "Please review the following prompts and provide feedback. Identify any conflict or redundant first. Then you must return the improved prompt inside <prompt>...</prompt> block to indicate the improved prompts.",
+        "ImprovedPrompts2CodesAddStarterCodes": "Please help me to complete this python function based on the function description. Finish the codes after def and pay attention to the indentation (do not include def ...). The indentation looks like: '    import time\n    time.sleep(10)\n    return 1' or '\treturn 1'. You must use <code>...</code> to indicate the return codes.",
+        "Instruction2CodesCoT":"Please help me to complete this python function based on the function description. First think step by step. Then finish the codes after def and pay attention to the indentation (do not include def ...). The indentation looks like: '    import time\n    time.sleep(10)\n    return 1' or '\treturn 1'. You must use <code>...</code> to indicate the return codes.",
+        "InstructionAndCodes2RefinedCodesSelfEval":"Please first evaluate the given answers based on the descriptions and examples. Then return the refined codes with a <code>...</code> block. The codes returned should not include def..."
+        
+    },
+    "method":"Instruction2CodesCoT",
+    "intermediate_raw_codes_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/prompt-code-487/human-eval/Experiments/Raw_responses",
+    "output_path": "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/prompt-code-487/human-eval/data/",
+    "dataset_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/prompt-code-487/human-eval/data/HumanEval.jsonl",
+    "processed_prompts_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/prompt-code-487/human-eval/Experiments/processed_prompts.pkl",
+
+    "raw_codes_path":"/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/RawCodes/gemini-1.5-flash/TrimmedInstruction2CodesBase/raw_responses.pkl",
+    "num_responses" : 3,
+    "temperature": 0.6,
+    "num": 164
+}
