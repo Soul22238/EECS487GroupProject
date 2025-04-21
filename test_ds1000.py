@@ -3,6 +3,7 @@ import json
 import argparse
 from typing import Any, Dict, List
 import concurrent.futures as cfuts 
+import pickle
 
 import pandas as pd
 from tqdm import tqdm
@@ -41,6 +42,7 @@ def eval_ds1000(answers: List[str]):
             # you have some options on how to actually execute the program here.
             futs.append(executor.submit(execution.check_correctness, test_program, timeout=120, completion_id=id))
         line_num = 0
+        pass_conditions = []
         for f in tqdm(cfuts.as_completed(futs), total=len(futs)):
             result = f.result()
             cid = result['completion_id']
@@ -51,13 +53,13 @@ def eval_ds1000(answers: List[str]):
             result['perturbation_type'] = ds1000[line_num]['metadata']['perturbation_type']
             ds1000_results.append(result)
             line_num += 1
-
+            pass_conditions.append(result['passed'])
     df_res = pd.DataFrame.from_records(ds1000_results)
     pd.set_option('display.precision', 3)
     summary = df_res.agg({'score': ['count', 'mean']}).to_string()
     summary += '\n' + df_res[['library', 'score']].groupby('library').agg({'score': ['count', 'mean']}).to_string()
     summary += '\n' + df_res[['perturbation_type', 'score']].groupby('perturbation_type').agg({'score': ['count', 'mean']}).to_string()
-    return summary
+    return summary,pass_conditions
 
 
 def postprocess(code: List | str):
@@ -83,6 +85,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     generated_code = [json.loads(l) for l in open(f"data/{args.model}-answers.jsonl", "r").readlines()]
     answers = [postprocess(l['code']) for l in generated_code]
-    summary = eval_ds1000(answers)
+    summary,pass_conditions= eval_ds1000(answers)
     with open(f'results/{args.model}-result.txt', 'w') as f:
         f.write(summary)
+    with open(f'results/{args.model}-pass.pkl', 'wb') as f:
+        pickle.dump(pass_conditions,f)

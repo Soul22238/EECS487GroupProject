@@ -5,6 +5,7 @@ import pickle
 import random
 import re
 import os
+import os
 
 with open('/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
@@ -40,7 +41,12 @@ def useAPI(model, prompt, candidate_count = 3, temperature = 0.5):
     return text
 
 
-def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_prompts_path=None):
+def getPrompt(instructions:dict, 
+              dataset_path, 
+              method:str, 
+              ids:list, 
+              trimmed_prompts_path=None,
+              trimmed_improved_prompts_path=None):
     """
     Given the original DS1000 dataset and method of prompting/instruction technique,
     return the prompts that feed into the model.
@@ -77,12 +83,14 @@ def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_pro
         prompts = [[instruction+problems[i]] for i in ids]
     elif method == "TrimmedInstruction2CodesBase":
         # The trimmed prompts have three fields: description, examples, starter_codes
+        print(trimmed_prompts_path)
         if os.path.exists(trimmed_prompts_path):
             with open(trimmed_prompts_path, 'rb') as f:
                 trimmed_prompts = pickle.load(f)
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
         prompts = [[instruction + "\n" + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
+
     elif method == "TrimmedInstruction2CodesWithoutExamples":
         if os.path.exists(trimmed_prompts_path):
             with open(trimmed_prompts_path, 'rb') as f:
@@ -90,6 +98,7 @@ def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_pro
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
         prompts = [[instruction + "\n" +trimmed_prompts[i]["description"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
+
     elif method == "TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)":
         # Use models to generate prompts
         if os.path.exists(trimmed_prompts_path):
@@ -98,6 +107,35 @@ def getPrompt(instructions:dict, dataset_path, method:str, ids:list, trimmed_pro
             print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
         instruction = instructions[method]
         prompts = [[instruction + "\nThe prompt is as follows:\n" + trimmed_prompts[i]["description"]+"\nExamples:\n"+trimmed_prompts[i]["examples"]] for i in ids]
+    
+    elif method == "TrimmedInstructionImprovedPrompts2odesAddStarterCodes":
+        if os.path.exists(trimmed_improved_prompts_path):
+            with open(trimmed_improved_prompts_path, 'rb') as f:
+                trimmed_improved_prompts = pickle.load(f)
+            print(f"Loaded trimmed_prompts from cache: {trimmed_improved_prompts_path}")
+        instruction = instructions[method]
+        prompts = [[instruction + "\n" + trimmed_improved_prompts[i][0]] for i in ids]
+    
+    elif method == "TrimmedInstruction2CodesCoT":
+        if os.path.exists(trimmed_prompts_path):
+            with open(trimmed_prompts_path, 'rb') as f:
+                trimmed_prompts = pickle.load(f)
+            print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
+        instruction = instructions[method]
+        prompts = [[instruction + "\n" +trimmed_prompts[i]["description"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]] for i in ids]
+
+    elif method == "TrimmedInstructionAndGeneratedCodes2CodesSelfEval":
+        if os.path.exists(trimmed_prompts_path):
+            with open(trimmed_prompts_path, 'rb') as f:
+                trimmed_prompts = pickle.load(f)
+            print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
+        # Load the codes
+        codes_path = config["raw_codes_path"]
+        with open(codes_path, "rb") as f:
+            raw_codes = pickle.load(f)
+        codes = process_raw_responses(raw_codes)
+        instruction = instructions[method]
+        prompts = [[instruction + "\n" +trimmed_prompts[i]["description"]+"\nStater Codes:\n"+trimmed_prompts[i]["starter_codes"]+"\nAnswers need to evaluate:\n"+codes[i][0]] for i in ids]
 
     return prompts
     
@@ -128,6 +166,7 @@ def prompt2reaponse(model,
                               prompt, 
                               candidate_count, 
                               temperature)
+            # print(response)
             responses.append(response)
             # Slowly process to not reach maximum
             time.sleep(1)
@@ -136,7 +175,7 @@ def prompt2reaponse(model,
             with open(new_path, 'wb') as f:
                 print(f"first{k} saved")
                 pickle.dump(raw_responses, f)
-            time.sleep(5)
+            time.sleep(2)
         k += 1
 
         # If we want to first try on a small number of points
@@ -147,23 +186,71 @@ def prompt2reaponse(model,
         pickle.dump(raw_responses, f)
     return raw_responses
 
-def response2improvedprompts():
-    pass
+def response2improvedprompts(raw_responses: list[list],
+                             method:str,
+                             output_folder:str,
+                             trimmed_prompts_path:str):
+    imporved_prompts = None
+    # Load trimmed prompts
+    if os.path.exists(trimmed_prompts_path):
+        with open(trimmed_prompts_path, 'rb') as f:
+            trimmed_prompts = pickle.load(f)
+        print(f"Loaded trimmed_prompts from cache: {trimmed_prompts_path}")
+
+    if method == "TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)":
+        # Extract the responses inside the <prompt></prompt> block
+        # Reurn a list[list] object with extracted improved prompts
+
+        imporved_prompts = []
+        num = 0
+        for responses_for_each_data in raw_responses:
+            prompt_each_task = []
+            pattern = fr"<prompt>(.*?)</prompt>"
+            for response in responses_for_each_data:
+                match = re.search(pattern, response, re.DOTALL)
+                if match:
+                    # Add starter code, we do not allow the model to change starter codes
+                    starter_code = trimmed_prompts[num]["starter_codes"]
+                    prompt_each_task.append(match.group(1).strip()+"\n\nStarter Codes are:"+starter_code)
+                else:
+                    print("NOT Matched!")
+                    print(num)
+                    print(response)
+                    prompt_each_task.append("")
+            imporved_prompts.append(prompt_each_task)
+            num += 1
+        # Store the improved prompts
+        path = os.path.join(output_folder, config["model_name"], method, f"{len(raw_responses)}improved_prompts.pkl")
+        with open(path, 'wb') as f:
+            pickle.dump(imporved_prompts, f)
+        
+    return imporved_prompts
+    
+    
+def process_raw_responses(raw_responses):
+    completions = []
+    for responses_for_each_data in raw_responses:
+        codes_for_each_task = []
+        for response in responses_for_each_data:
+            # 尝试匹配 <code>...</code>
+            code_tags = re.findall(r"<code>(.*?)</code>", response, re.DOTALL)
+            if code_tags and code_tags[-1].strip():  # 存在且不为空
+                code = code_tags[-1].strip()
+            else:
+                # 退而求其次，提取最后一个 ```python\n...\n``` 代码块
+                code_blocks = re.findall(r"```python\s*\n(.*?)```", response, re.DOTALL)
+                code = code_blocks[-1].strip() if code_blocks else ""
+
+            codes_for_each_task.append(code)
+        completions.append(codes_for_each_task)
+    return completions
 
 def response2answers(raw_responses, dataset_path, output_folder, ids):
     """
     Preprocess the response(contianing codes) and write these response in json format to 
     allow the DS1000 examine the accuracy
     """
-    
-    completetions = []
-    for responses_for_each_data in raw_responses:
-        codes_for_each_task = []
-        for response in responses_for_each_data:
-            clean_code = response.replace("```python\n", "").replace("\n```", "").strip()
-            codes_for_each_task.append(clean_code)
-        completetions.append(codes_for_each_task)
-    ids = set(ids)
+    completions = process_raw_responses(raw_responses)
 
     # Output json samples
     line_num = 0
@@ -178,7 +265,7 @@ def response2answers(raw_responses, dataset_path, output_folder, ids):
             del item["prompt"]
             del item["reference_code"]
             item["id"] = problem_id
-            sample = completetions[line_num]
+            sample = completions[line_num]
             for code in sample:
                 item["code"] = code
                 out_samples.append(item)
@@ -223,49 +310,238 @@ def sample_DS1000(sample_size = 10000):
 ids = sample_DS1000(sample_size = config["num"])  
 
 
-
-prompts = getPrompt(instructions=config["instructions"], 
+# prompts = getPrompt(instructions=config["instructions"], 
+#                     dataset_path=config["dataset_path"], 
+#                     method=config["method"], 
+#                     ids=ids,
+#                     trimmed_prompts_path=config["trimmed_prompts_path"])
+# 
+# raw_responses = prompt2reaponse(model=model,
+#                  prompts=prompts,
+#                  method=config["method"],
+#                  candidate_count=config["num_responses"],
+#                  temperature=config["temperature"], 
+#                  output_folder=config["intermediate_raw_codes_path"],
+#                  maximum=10000
+#                 )
+if config["method"] == "TrimmedInstruction2PromptsImprovedPrompts(ExcludingStarterCodes)":
+    prompts = getPrompt(instructions=config["instructions"], 
                     dataset_path=config["dataset_path"], 
                     method=config["method"], 
                     ids=ids,
                     trimmed_prompts_path=config["trimmed_prompts_path"])
 
-raw_responses = prompt2reaponse(model=model,
-                 prompts=prompts,
-                 method=config["method"],
-                 candidate_count=config["num_responses"],
-                 temperature=config["temperature"], 
-                 output_folder=config["intermediate_raw_codes_path"],
-                 maximum=10000
-                )
-raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
-print(raw_response_path)
-with open(raw_response_path, 'rb') as f:
-    #raw_responses = pickle.load(f)
-    raw_all_responses = pickle.load(f)
-print(len(raw_all_responses))
-raw_responses = []
-for id, responses in enumerate(raw_all_responses):
-    if id not in ids:
-        continue
-    raw_responses.append(responses)
+    # raw_responses = prompt2reaponse(model=model,
+    #                  prompts=prompts,
+    #                  method=config["method"],
+    #                  candidate_count=config["num_responses"],
+    #                  temperature=config["temperature"], 
+    #                  output_folder=config["intermediate_raw_codes_path"],
+    #                  maximum=10000
+    #                 )
+    raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
+    print(raw_response_path)
+    with open(raw_response_path, 'rb') as f:
+        raw_all_responses = pickle.load(f)
+        raw_responses = []
+        for id, responses in enumerate(raw_all_responses):
+            if id not in ids:
+                continue
+            raw_responses.append(responses)
+    # Check if there are unsuccessful responses
+    # If there are, then ask the model to response again
+    num = 0
+    for responses in raw_responses:
+        for index, response in enumerate(responses):
+            if not response:
+                prompt = prompts[num][index]
+                another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
+                print(another_response)
+                print(num)
+                responses[index] = another_response
+        num += 1
+    # ## Save the entire raw responses
+    with open(raw_response_path, 'wb') as f:
+        pickle.dump(raw_responses, f)
+
+    improved_prompts = response2improvedprompts(raw_responses, method=config["method"],output_folder=config["intermediate_raw_codes_path"],trimmed_prompts_path=config["trimmed_prompts_path"])
+    # improved_prompts_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{len(raw_responses)}improved_prompts.pkl")
+    # with open(improved_prompts_path, 'rb') as f:
+    #     improved_prompts = pickle.load(f)
+
+elif config["method"] == "TrimmedInstructionImprovedPrompts2odesAddStarterCodes":
+
+    prompts = getPrompt(instructions=config["instructions"], 
+                        dataset_path=config["dataset_path"], 
+                        method=config["method"], 
+                        ids=ids,
+                        trimmed_improved_prompts_path=config["trimmed_improved_prompts_path"])
+
+    # raw_responses = prompt2reaponse(model=model,
+    #                  prompts=prompts,
+    #                  method=config["method"],
+    #                  candidate_count=config["num_responses"],
+    #                  temperature=config["temperature"], 
+    #                  output_folder=config["intermediate_raw_codes_path"],
+    #                  maximum=100000
+    #                 )
+    raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
+    #raw_response_path = "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/RawCodes/gemini-1.5-flash/TrimmedInstructionImprovedPrompts2odes(AddStarterCodes)/1000raw_responses.pkl"
+    # print(raw_response_path)
+    with open(raw_response_path, 'rb') as f:
+        #raw_responses = pickle.load(f)
+        raw_all_responses = pickle.load(f)
+    
+    #print(len(raw_all_responses))
+    raw_responses = []
+    for id, responses in enumerate(raw_all_responses):
+        if id not in ids:
+            continue
+        raw_responses.append(responses)
+    #print(raw_responses[299][0])
+    #print(prompts[299][0])
+    # Check if there are unsuccessful responses
+    # If there are, then ask the model to response again
+    num = 0
+    for responses in raw_responses:
+        for index, response in enumerate(responses):
+            if not response:
+                prompt = prompts[num][index]
+                another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
+                print(another_response)
+                print(num)
+                responses[index] = another_response
+        num += 1
+    ## Save the entire raw responses
+    with open(raw_response_path, 'wb') as f:
+        pickle.dump(raw_responses, f)
+    response2answers(raw_responses, config["dataset_path"], output_folder=config["output_path"],ids=ids)
+
+elif config["method"] == "TrimmedInstruction2CodesCoT":
+    prompts = getPrompt(instructions=config["instructions"], 
+                        dataset_path=config["dataset_path"], 
+                        method=config["method"], 
+                        ids=ids,
+                        trimmed_prompts_path=config["trimmed_prompts_path"])
+
+    # raw_responses = prompt2reaponse(model=model,
+    #                  prompts=prompts,
+    #                  method=config["method"],   
+    #                  candidate_count=config["num_responses"],
+    #                  temperature=config["temperature"], 
+    #                  output_folder=config["intermediate_raw_codes_path"],
+    #                  maximum=10000
+    #                 )
+    raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
+    # raw_response_path = "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/RawCodes/gemini-1.5-flash/TrimmedInstructionImprovedPrompts2odes(AddStarterCodes)/1000raw_responses.pkl"
+
+    with open(raw_response_path, 'rb') as f:
+        #raw_responses = pickle.load(f)
+        raw_all_responses = pickle.load(f)
+    
+
+    raw_responses = []
+    for id, responses in enumerate(raw_all_responses):
+        if id not in ids:
+            continue
+        raw_responses.append(responses)
+
+    # Check if there are unsuccessful responses
+    # If there are, then ask the model to response again
+    num = 0
+    for responses in raw_responses:
+        for index, response in enumerate(responses):
+            if not response:
+                prompt = prompts[num][index]
+                another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
+                print(another_response)
+                print(num)
+                responses[index] = another_response
+        num += 1
+    ## Save the entire raw responses
+    with open(raw_response_path, 'wb') as f:
+        pickle.dump(raw_responses, f)
+
+    #print(prompts[150][0])
+    response2answers(raw_responses, config["dataset_path"], output_folder=config["output_path"],ids=ids)
+
+elif config["method"] in set(["TrimmedInstruction2CodesBase" ,"TrimmedInstructionAndGeneratedCodes2CodesSelfEval"]):
+    prompts = getPrompt(instructions=config["instructions"], 
+                        dataset_path=config["dataset_path"], 
+                        method=config["method"], 
+                        ids=ids,
+                        trimmed_prompts_path=config["trimmed_prompts_path"])
+    # raw_responses = prompt2reaponse(model=model,x
+    #                 prompts=prompts,
+    #                 method=config["method"],
+    #                 candidate_count=config["num_responses"],
+    #                 temperature=config["temperature"], 
+    #                 output_folder=config["intermediate_raw_codes_path"],
+    #                 maximum=100000
+    #                )
+    
+    raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
+    # #raw_response_path = "/Users/mysteryshack/Downloads/Graduate/Courses/EECS487/Project/DS-1000/ModelAPI/RawCodes/gemini-1.5-flash/TrimmedInstructionImprovedPrompts2odes(AddStarterCodes)/1000raw_responses.pkl"
+    # print(raw_response_path)
+    with open(raw_response_path, 'rb') as f:
+        #raw_responses = pickle.load(f)
+        raw_all_responses = pickle.load(f)
+    # 
+    # #print(len(raw_all_responses))
+    raw_responses = []
+    for id, responses in enumerate(raw_all_responses):
+        if id not in ids:
+            continue
+        raw_responses.append(responses)
+    print(raw_responses[299][0])
+    print(prompts[299][0])
+    # Check if there are unsuccessful responses
+    # If there are, then ask the model to response again
+    num = 0
+    for responses in raw_responses:
+        for index, response in enumerate(responses):
+            if not response:
+                prompt = prompts[num][index]
+                another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
+                print(another_response)
+                print(num)
+                responses[index] = another_response
+        num += 1
+    ## Save the entire raw responses
+    with open(raw_response_path, 'wb') as f:
+        pickle.dump(raw_responses, f)
+    response2answers(raw_responses, config["dataset_path"], output_folder=config["output_path"],ids=ids)
+    
+
+
+# raw_response_path = os.path.join(config["intermediate_raw_codes_path"], config["model_name"], config["method"], f"{config['num']}raw_responses.pkl")
+# print(raw_response_path)
+# with open(raw_response_path, 'rb') as f:
+#     #raw_responses = pickle.load(f)
+#     raw_all_responses = pickle.load(f)
+# print(len(raw_all_responses))
+# raw_responses = []
+# for id, responses in enumerate(raw_all_responses):
+#     if id not in ids:
+#         continue
+#     raw_responses.append(responses)
 
 
 # Check if there are unsuccessful responses
 # If there are, then ask the model to response again
-num = 0
-for responses in raw_responses:
-    for index, response in enumerate(responses):
-        if not response:
-            prompt = prompts[num][index]
-            another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
-            print(another_response)
-            print(num)
-            responses[index] = another_response
-    num += 1
-# 
-# ## Save the entire raw responses
-with open(raw_response_path, 'wb') as f:
-    pickle.dump(raw_responses, f)
-response2answers(raw_responses, config["dataset_path"], output_folder=config["output_path"],ids=ids)
+# num = 0
+# for responses in raw_responses:
+#     for index, response in enumerate(responses):
+#         if not response:
+#             prompt = prompts[num][index]
+#             another_response = useAPI(model, prompt, config["num_responses"], config["temperature"])
+#             print(another_response)
+#             print(num)
+#             responses[index] = another_response
+#     num += 1
+# # 
+# # ## Save the entire raw responses
+# with open(raw_response_path, 'wb') as f:
+#     pickle.dump(raw_responses, f)
+# response2answers(raw_responses, config["dataset_path"], output_folder=config["output_path"],ids=ids)
 
