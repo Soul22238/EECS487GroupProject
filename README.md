@@ -13,7 +13,7 @@ The codes and data are largely adapted from the paper [_DS-1000: A Natural and R
   volume={abs/2211.11501}
 }
 ```
-### Experiments
+### Preprocessing and Experiments
 First revise the ModelAPI/config.jsonModelAPI/config.json.
 Replace your_key with your API key.
 Then 
@@ -21,7 +21,7 @@ Then
 python ModelAPI/generate_codes.py
 ```
 
-### Results
+### Evaluation and Results
 
 ```shell
 
