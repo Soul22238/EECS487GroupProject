@@ -111,7 +111,7 @@ The trimmed prompts are stored in ./DS-1000/data/trimmed_prompts.
 Open ModelAPI/config.json and replace the placeholder "your_key" with your actual API key.
 Then 
 ```shell
-python ModelAPI/generate_codes.py
+python ModelAPI/Gemini-1.5-Flash/generate_codes.py
 ```
 During this process, the model will save the raw responses returned by the API in the ./ModelAPI/RawCodes/model_name directory.
 
